@@ -1,7 +1,7 @@
 import { MovieCard, Search, Spinner } from "./components";
 import { useState, useEffect } from "react";
 import { useDebounce } from "react-use";
-import { updateSearchCount } from "./appwrite.js";
+import { getTrendingMovies, updateSearchCount } from "./appwrite.js";
 
 const API_BASE_URL = "https://api.themoviedb.org/3";
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
@@ -17,6 +17,7 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [movieList, setMovieList] = useState([]);
+  const [trendingMovies, setTrendingMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   useDebounce(() => setDebouncedSearchTerm(searchTerm), 1500, [searchTerm]);
@@ -56,9 +57,22 @@ const App = () => {
     }
   };
 
+  const loadTrendingMovies = async () => {
+    try {
+      const movies = await getTrendingMovies();
+      setTrendingMovies(movies);
+    } catch (error) {
+      console.error(`Error loading trending movies: ${error}`);
+    }
+  };
+
   useEffect(() => {
     fetchMovies(debouncedSearchTerm);
   }, [debouncedSearchTerm]);
+
+  useEffect(() => {
+    loadTrendingMovies();
+  }, []);
 
   const handleSearch = (search) => {
     setSearchTerm(search);
@@ -78,8 +92,20 @@ const App = () => {
           <Search searchTerm={searchTerm} onSearch={handleSearch} />
         </header>
 
+        <section className="trending">
+          <h2>Trending</h2>
+          <ul>
+            {trendingMovies.map(({ movie_id, searchTerm: search, poster_url }, index) => (
+              <li key={movie_id}>
+                <p>{index + 1}</p>
+                <img src={poster_url} alt={search} />
+              </li>
+            ))}
+          </ul>
+        </section>
+
         <section className="all-movies">
-          <h2 className="mt-[40px]">All Movies</h2>
+          <h2>Popularity</h2>
           {loading && <Spinner />}
           {errorMessage && <p className="text-red-500">{errorMessage}</p>}
           <ul>
