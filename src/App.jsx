@@ -1,5 +1,6 @@
 import { MovieCard, Search, Spinner } from "./components";
 import { useState, useEffect } from "react";
+import { useDebounce } from "react-use";
 
 const API_BASE_URL = "https://api.themoviedb.org/3";
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
@@ -13,9 +14,11 @@ const API_OPTIONS = {
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [movieList, setMovieList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  useDebounce(() => setDebouncedSearchTerm(searchTerm), 800, [searchTerm]);
 
   const fetchMovies = async (query = "") => {
     setLoading(true);
@@ -49,8 +52,8 @@ const App = () => {
   };
 
   useEffect(() => {
-    fetchMovies(searchTerm);
-  }, [searchTerm]);
+    fetchMovies(debouncedSearchTerm);
+  }, [debouncedSearchTerm]);
 
   const handleSearch = (search) => {
     setSearchTerm(search);
